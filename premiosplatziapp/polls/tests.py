@@ -30,15 +30,16 @@ class QuestionModelTests(TestCase):
         time = timezone.now() - datetime.timedelta(hours=22)
         self.question.pub_date = time
         self.assertIs(self.question.was_published_recnetly(), True)
+
+
+def create_question(question_text, days):
+    """Create a question with the given "question_text", and publish the given number of days offset to now (negative for questions published in the past, positive for questions that have yet to be published"""
+    time = timezone.now() + datetime.timedelta(days=days)
+    return Question.objects.create(question_text=question_text, pub_date=time)
         
     
 
 class QuestionIndexViewTets(TestCase):
-
-    def setUp(self) -> None:
-        self.question = Question(question_text="Pregunta Generica??")
-        
-
     # Test para verificar que pasa cuando no hay preguntas    
     def test_no_questions(self):
         """If no question exists, an apropiate message is displayed"""
@@ -48,10 +49,14 @@ class QuestionIndexViewTets(TestCase):
         self.assertQuerysetEqual(response.context["latest_question_list"], [])
 
     def test_questions_with_future_pub_date(self):
-        """Questions with pub_date greater than actual shouldn't be displayed """
-        time = timezone.now() + datetime.timedelta(minutes=1)
-        self.question.pub_date = time
-        self.question.save()
+        """Questions with pub_date greater than actual date shouldn't be displayed """
+        create_question("Future question", days=30)
         response = self.client.get(reverse("polls:index"))
-        self.assertEqual(response.status_code, 200)
-        self.assertNotIn(self.question,response.context["latest_question_list"])
+        self.assertContains(response, "No polls are available.")        
+        self.assertQuerysetEqual(response.context["latest_question_list"], [])
+
+    def test_past_question_pub_date(self):
+        """Questions with pub_date in the past are diplayed on index page"""
+        question = create_question("Past question", days=-10)
+        response = self.client.get(reverse("polls:index"))
+        self.assertQuerysetEqual(response.context["latest_question_list"], [question])
