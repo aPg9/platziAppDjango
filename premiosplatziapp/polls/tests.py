@@ -2,7 +2,7 @@ from django.urls.base import reverse
 from django.utils import timezone
 from django.test import TestCase
 from .models import Question
-from .views import IndexView
+
 
 import datetime
 
