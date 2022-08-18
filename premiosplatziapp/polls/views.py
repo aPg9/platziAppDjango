@@ -21,7 +21,7 @@ from django.utils import timezone
 #         "question": question
     # })
 
-
+# Class based view
 class IndexView(generic.ListView):
     template_name = "polls/index.html"
     context_object_name = "latest_question_list"

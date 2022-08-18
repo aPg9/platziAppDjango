@@ -11,7 +11,7 @@ import datetime
 class QuestionModelTests(TestCase):
 
     def setUp(self) -> None:
-        self.question = Question(question_text="Quien es el mejor Course Director de Platzi?")
+        self.question = Question(question_text="pregunta generica??")
 
     def test_was_published_recently_with_future_questions(self):
         """was_published_recently returns false for questions whose pub_date is in the future"""
@@ -36,7 +36,7 @@ class QuestionModelTests(TestCase):
 class QuestionIndexViewTets(TestCase):
 
     def setUp(self) -> None:
-        self.question = Question(question_text="Pregunta Generica ??")
+        self.question = Question(question_text="Pregunta Generica??")
         
 
     # Test para verificar que pasa cuando no hay preguntas    
