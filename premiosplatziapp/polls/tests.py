@@ -3,7 +3,6 @@ from django.utils import timezone
 from django.test import TestCase
 from .models import Question
 
-
 import datetime
 
 
@@ -11,9 +10,14 @@ def create_question(question_text, days):
     """Create a question with the given "question_text", and publish the given number of days offset to now (negative for questions published in the past, positive for questions that have yet to be published"""
     time = timezone.now() + datetime.timedelta(days=days)
     return Question.objects.create(question_text=question_text, pub_date=time)
-        
 
-# Se testean modelos y vistas
+def question_choice(question_text, days, choices):
+    time = timezone.now()
+    choices = int(0)
+    return Question.objects.create(question_text=question_text, pub_date=time, choices=choices)
+
+
+#Se testean modelos y vistas
 class QuestionModelTests(TestCase):
 
     def setUp(self) -> None:
@@ -35,7 +39,16 @@ class QuestionModelTests(TestCase):
         """was_published_recently returns true for questions whose pub_date is in the present"""
         time = timezone.now() - datetime.timedelta(hours=22)
         self.question.pub_date = time
-        self.assertIs(self.question.was_published_recnetly(), True)    
+        self.assertIs(self.question.was_published_recnetly(), True) 
+
+    def test_create_question_without_choices(self):
+        """If a question has no choice, it will be deleted"""
+        question = question_choice(question_text="question choice", days=timezone.now(), choices=0)   
+
+        if question.choices == 0:
+            question.delete()
+        question_count = len(Question.objects.all())
+        self.assertEqual(question_count, 0)
     
 
 class QuestionIndexViewTests(TestCase):
@@ -70,7 +83,7 @@ class QuestionIndexViewTests(TestCase):
     def test_two_past_questions(self):
         """The questions index page may display multiple questions"""
         past_question1 = create_question(question_text="Past question 1", days=-30)
-        past_question2 = create_question(question_text="Past question 2", days=-40)
+        past_question2 = create_question(question_text="Future question 2", days=-40)
         response = self.client.get(reverse("polls:index"))
         self.assertQuerysetEqual(response.context["latest_question_list"], [past_question1, past_question2])
 
@@ -79,3 +92,47 @@ class QuestionIndexViewTests(TestCase):
         future_question2 = create_question(question_text="Future question 2", days=40)
         response = self.client.get(reverse("polls:index"))
         self.assertQuerysetEqual(response.context["latest_question_list"], [])
+
+
+class DetailViewTest(TestCase):
+    def test_future_question(self):
+        """
+        The detail view of a question with pub_date in the future returns a 404 error not found 
+        """
+        future_question = create_question(question_text="Future question", days=30)
+        url = reverse("polls:detail", args=(future_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_past_question(self):
+        """
+        The detail view of a question with pub_date in the past displays the quesion's text
+        """
+        past_question = create_question(question_text="Past question", days=-30)
+        url = reverse("polls:detail", args=(past_question.id,))
+        response = self.client.get(url)
+        self.assertContains(response, past_question.question_text)
+
+class ResultViewTest(TestCase):
+    def test_question_not_exists(self):
+        """
+        If question id does not exists, get 404 
+        """
+        response = self.client.get(reverse("polls:results", kwargs={"pk":1}))
+        self.assertEqual(response.status_code, 404)
+
+    def test_future_question(self):
+        """If it's a question from the future shows a 404 not found"""
+        future_question = create_question("Future question", days=30)
+        url = reverse("polls:detail", args=(future_question.id,))
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 404)
+
+    def test_past_question(self):
+        """
+        If it's a question with pub_date in the past displays the question text
+        """
+        past_question = create_question("Past question", days=-10)
+        url = reverse("polls:detail", args=(past_question.id,))
+        response = self.client.get(url)
+        self.assertContains(response, past_question.question_text)   
