@@ -1,0 +1,33 @@
+body{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+
+    height: 100vh;
+    font-family: Arial, Helvetica, sans-serif;
+    background: rgb(0, 15, 26);
+   
+}
+
+ul{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    
+}
+
+li{
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    
+    width: 500px;
+
+    border: 1px solid white;
+    padding: 50px;
+    margin-bottom: 20px;
+    font-size: 28px;
+}
+
