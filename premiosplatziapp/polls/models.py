@@ -11,7 +11,7 @@ class Question(models.Model):
     def __str__(self):
         return self.question_text
 
-    def was_published_recnetly(self):
+    def was_published_recently(self):
         return timezone.now() >= self.pub_date >= timezone.now() - datetime.timedelta(days=1)
 
 
